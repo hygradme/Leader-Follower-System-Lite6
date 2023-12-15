@@ -28,7 +28,7 @@ if __name__ == "__main__":
     DXL_IDs = [1, 2, 3, 4, 5, 6]
     if use_gripper:
         pga = ParalleGripperOpenRB150(arm)
-        gripper_id = 0
+        gripper_id = 8
         DXL_IDs.append(gripper_id)
         gripper_scale = 4
     leader = Lite6Leader(DEVICENAME, DXL_IDs=DXL_IDs)
