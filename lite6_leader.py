@@ -23,7 +23,7 @@ class Lite6Leader:
 
         # Default setting
         self.DXL_IDs = DXL_IDs#[1, 2, 3, 4, 5, 6, 7]                 # DXLのIDリスト
-        BAUDRATE = 57600                             # Dynamixelのボーレート
+        BAUDRATE = 1000000#115200#57600                             # Dynamixelのボーレート
         # DEVICENAME = 'COM3'                          # ポート名
         TORQUE_ENABLE = 1                            # トルクをON
         TORQUE_DISABLE = 0                           # トルクをOFF
