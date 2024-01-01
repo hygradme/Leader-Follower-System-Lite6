@@ -22,7 +22,7 @@ def move_to_start_position(arm, servo_initial):
 
 
 if __name__ == "__main__":
-    DEVICENAME = "COM3"
+    DEVICENAME = "COM7"
     use_gripper = True
     use_follower = True
     use_left = True
@@ -76,25 +76,27 @@ if __name__ == "__main__":
     while True:
         start_time = time.time()
         angles = leader.get_angles_from_leader(is_radian=True)
+        leader_time = time.time()
         angles_left = angles[0:6]
         angles_right = angles[7:13]
         print("left:", [round(angle * 180 / math.pi, 1) for angle in angles_left], "right:", [round(angle * 180 / math.pi, 1) for angle in angles_right], "gripper:",round(angles[6] * 180 / math.pi, 1), round(angles[13] * 180 / math.pi, 1))
-        leader_time = time.time()
-        print("leader took", leader_time - start_time, "[s]")
+        # print("leader took", leader_time - start_time, "[s]")
         if use_follower:
             rc_left.move_robot_joint(angles_left, is_radian=True)
-            print("left took", time.time() - leader_time, "[s]")
+            # print("left took", time.time() - leader_time, "[s]")
             rc_right.move_robot_joint(angles_right, is_radian=True)
-            print("right took", time.time() - leader_time, "[s]")
+            # print("right took", time.time() - leader_time, "[s]")
             if use_gripper:
-                gripper_pos_left = int(angles[6] * gripper_scale * 180 / math.pi) - gripper_offset_left
-                gripper_pos_left = max(min(gripper_pos_left, 250), 0)
-                pga_left.move(gripper_pos_left)
+                gripper_start = time.time()
                 gripper_pos_right = -int(angles[13] * gripper_scale * 180 / math.pi) - gripper_offset_right
                 gripper_pos_right = max(min(gripper_pos_right, 250), 0)
                 pga_right.move(gripper_pos_right)
+                gripper_pos_left = int(angles[6] * gripper_scale * 180 / math.pi) - gripper_offset_left
+                gripper_pos_left = max(min(gripper_pos_left, 250), 0)
+                pga_left.move(gripper_pos_left)
+                # print("gripper took", time.time()- gripper_start)
         else:
-            time.sleep(0.02)
+            time.sleep(0.01)
         end_time = time.time()
         print(end_time - start_time, "[s]")
 

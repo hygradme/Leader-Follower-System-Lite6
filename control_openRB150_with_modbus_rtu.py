@@ -14,7 +14,9 @@ class ParalleGripperOpenRB150:
         self._arm = arm
         self._arm.set_mode(0)
         self._arm.set_state(0)
+        # code = self._arm.set_tgpio_modbus_baudrate(1000000)
         code = self._arm.set_tgpio_modbus_baudrate(115200)
+        # code = self._arm.set_tgpio_modbus_baudrate(230400)
         self._arm.set_tgpio_digital(1, 1)
         self._arm.set_tgpio_digital(0, 1)
         print('set_tgpio_modbus_baudrate, code={}'.format(code))
@@ -38,7 +40,9 @@ class ParalleGripperOpenRB150:
         assert pos <= self.open_in_res
 
         data = [0x01, 0x06, 0x00, 0x80] + int_to_2bytes_list(pos)
+        # start = time.time()
         res = self._arm.getset_tgpio_modbus_data(data)
+        # print("gripper move took", time.time()- start)
         return res
 
     def move_out_of_10(self, ratio):

@@ -53,12 +53,15 @@ class Lite6Leader:
             print("Failed to set baudrate")
             quit()
 
-    def get_angles_from_leader(self, is_radian=True):
+    def old_get_angles_from_leader(self, is_radian=True):
         angles = []
 
         for i, dxl_id in enumerate(self.DXL_IDs):
             # Read present position
+            start_time = time.time()
             dxl_present_position, dxl_comm_result, dxl_error = self.packetHandler.read4ByteTxRx(self.portHandler, dxl_id, self.ADDR_PRO_PRESENT_POSITION)
+            end_time = time.time()
+            print(f"dxl{dxl_id} took {end_time- start_time} [s]")
             if dxl_comm_result != COMM_SUCCESS:
                 print("%s" % self.packetHandler.getTxRxResult(dxl_comm_result))
             elif dxl_error != 0:
@@ -70,7 +73,65 @@ class Lite6Leader:
                 angle = angle * math.pi / 180
             angles.append(angle)
         return angles
+    
+    def old_2byte_get_angles_from_leader(self, is_radian=True):
+        angles = []
 
+        for i, dxl_id in enumerate(self.DXL_IDs):
+            # Read present position (2 bytes instead of 4)
+            start_time = time.time()
+            dxl_present_position, dxl_comm_result, dxl_error = self.packetHandler.read2ByteTxRx(self.portHandler, dxl_id, self.ADDR_PRO_PRESENT_POSITION)
+            end_time = time.time()
+            # print(f"dxl{dxl_id} took {end_time- start_time} [s]")
+
+            if dxl_comm_result != COMM_SUCCESS:
+                print("%s" % self.packetHandler.getTxRxResult(dxl_comm_result))
+            elif dxl_error != 0:
+                print("%s" % self.packetHandler.getRxPacketError(dxl_error))
+
+            # Convert to degree and adjust
+            # Note: The conversion factor might need to be adjusted based on the encoder resolution
+            angle = (dxl_present_position / 4096) * 360 - self.angle_offsets[i]
+            if is_radian:
+                angle = angle * math.pi / 180
+            angles.append(angle)
+
+        return angles
+
+    def get_angles_from_leader(self, is_radian=True):
+        angles = []
+        byte_size = 4
+
+        # Initialize GroupBulkRead instance
+        groupBulkRead = GroupBulkRead(self.portHandler, self.packetHandler)
+
+        # Add parameters to the group bulk read
+        for dxl_id in self.DXL_IDs:
+            groupBulkRead.addParam(dxl_id, self.ADDR_PRO_PRESENT_POSITION, byte_size)
+
+        # Perform bulk read
+        dxl_comm_result = groupBulkRead.txRxPacket()
+        if dxl_comm_result != COMM_SUCCESS:
+            print("%s" % self.packetHandler.getTxRxResult(dxl_comm_result))
+
+        # Check if data is available and then get the data
+        for i, dxl_id in enumerate(self.DXL_IDs):
+            if groupBulkRead.isAvailable(dxl_id, self.ADDR_PRO_PRESENT_POSITION, byte_size):
+                dxl_present_position = groupBulkRead.getData(dxl_id, self.ADDR_PRO_PRESENT_POSITION, byte_size)
+
+                # Convert to degree and adjust
+                # Note: The conversion factor might need to be adjusted based on the encoder resolution
+                angle = (convert_dxl_to_int32(dxl_present_position) / 4096) * 360 - self.angle_offsets[i]
+                if is_radian:
+                    angle = angle * math.pi / 180
+                angles.append(angle)
+            else:
+                print(f"Failed to get data for DXL ID: {dxl_id}")
+
+        # Clear the bulk read parameters
+        groupBulkRead.clearParam()
+
+        return angles
 
 if __name__ == "__main__":
     leader = Lite6Leader()
