@@ -10,12 +10,12 @@ def int_to_2bytes_list(value):
 
 
 class ParalleGripperOpenRB150:
-    def __init__(self, arm, torque_limit=150):
+    def __init__(self, arm, torque_limit=150, baudrate=115200):
         self._arm = arm
         self._arm.set_mode(0)
         self._arm.set_state(0)
         # code = self._arm.set_tgpio_modbus_baudrate(1000000)
-        code = self._arm.set_tgpio_modbus_baudrate(115200)
+        code = self._arm.set_tgpio_modbus_baudrate(baudrate)
         # code = self._arm.set_tgpio_modbus_baudrate(230400)
         self._arm.set_tgpio_digital(1, 1)
         self._arm.set_tgpio_digital(0, 1)

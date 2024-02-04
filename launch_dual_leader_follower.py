@@ -1,5 +1,6 @@
 import math
 import time
+import json
 from unittest.mock import MagicMock, create_autospec
 
 from xarm.wrapper import XArmAPI
@@ -22,14 +23,20 @@ def move_to_start_position(arm, servo_initial):
 
 
 if __name__ == "__main__":
-    DEVICENAME = "COM7"
-    use_gripper = True
-    use_follower = True
-    use_left = True
-    use_right = True
+    with open('config.json', 'r') as config_file:
+        config = json.load(config_file)
 
-    ip_robot_left = "192.168.1.188"
-    ip_robot_right = "192.168.1.160"
+    DEVICENAME = config["DEVICENAME"]
+    use_follower = config["use_follower"]
+    use_left = config["use_left"]
+    use_right = config["use_right"]
+    ip_robot_left = config["ip_robot_left"]
+    ip_robot_right = config["ip_robot_right"]
+    DXL_IDs_left = config["DXL_IDs_left"]
+    DXL_IDs_right = config["DXL_IDs_right"]
+    leader_baudrate = config["leader_baudrate"]
+
+    use_gripper = config["use_gripper"]
 
     if use_left:
         arm_left = XArmAPI(ip_robot_left, is_radian=True)
@@ -41,26 +48,29 @@ if __name__ == "__main__":
     else:
         arm_right = create_autospec(XArmAPI)
 
-    DXL_IDs_left = [1, 2, 3, 4, 5, 6]
-    DXL_IDs_right = [11, 12, 13, 14, 15, 16]
     if use_gripper:
-        pga_left = ParalleGripperOpenRB150(arm_left)
-        pga_right = ParalleGripperOpenRB150(arm_right)
-        gripper_id_left = [8]
-        gripper_id_right =  [18]
+        gripper_follower_baudrate = config["gripper_follower_baudrate"]
+
+        gripper_id_left = config["gripper_id_left"]
+        gripper_id_right = config["gripper_id_right"]
+        gripper_scale = config["gripper_scale"]
+        gripper_offset_left = config["gripper_offset_left"]
+        gripper_offset_right = config["gripper_offset_right"]
+        gripper_pos_max_deg = config["gripper_pos_max_deg"]
+        gripper_pos_min_deg = config["gripper_pos_min_deg"]
+
+        pga_left = ParalleGripperOpenRB150(arm_left, baudrate=gripper_follower_baudrate)
+        pga_right = ParalleGripperOpenRB150(arm_right, baudrate=gripper_follower_baudrate)
         DXL_IDs_left.extend(gripper_id_left)
         DXL_IDs_right.extend(gripper_id_right)
-        gripper_scale = 8
-        gripper_offset_left = 40
-        gripper_offset_right = 40
+
     DXL_IDs = DXL_IDs_left + DXL_IDs_right
-    leader = Lite6Leader(DEVICENAME, DXL_IDs=DXL_IDs)
+    leader = Lite6Leader(DEVICENAME, DXL_IDs=DXL_IDs, BAUDRATE=leader_baudrate)
 
     DH_params = None
     rc_left = RobotContorller(arm_left, DH_params, filter_size=5, filter_type=None)
     rc_right = RobotContorller(arm_right, DH_params, filter_size=5, filter_type=None)
 
-    # initialize
     angles = leader.get_angles_from_leader(is_radian=True)
     time.sleep(2)
 
@@ -72,7 +82,6 @@ if __name__ == "__main__":
     if use_gripper:
         # pga.change_goal_current_val(50)
         time.sleep(0.5)
-
     while True:
         start_time = time.time()
         angles = leader.get_angles_from_leader(is_radian=True)
@@ -80,26 +89,20 @@ if __name__ == "__main__":
         angles_left = angles[0:6]
         angles_right = angles[7:13]
         print("left:", [round(angle * 180 / math.pi, 1) for angle in angles_left], "right:", [round(angle * 180 / math.pi, 1) for angle in angles_right], "gripper:",round(angles[6] * 180 / math.pi, 1), round(angles[13] * 180 / math.pi, 1))
-        # print("leader took", leader_time - start_time, "[s]")
         if use_follower:
             rc_left.move_robot_joint(angles_left, is_radian=True)
-            # print("left took", time.time() - leader_time, "[s]")
             rc_right.move_robot_joint(angles_right, is_radian=True)
-            # print("right took", time.time() - leader_time, "[s]")
             if use_gripper:
                 gripper_start = time.time()
                 gripper_pos_right = -int(angles[13] * gripper_scale * 180 / math.pi) - gripper_offset_right
-                gripper_pos_right = max(min(gripper_pos_right, 250), 0)
+                gripper_pos_right = max(min(gripper_pos_right, gripper_pos_max_deg), gripper_pos_min_deg)
                 pga_right.move(gripper_pos_right)
-                gripper_pos_left = int(angles[6] * gripper_scale * 180 / math.pi) - gripper_offset_left
-                gripper_pos_left = max(min(gripper_pos_left, 250), 0)
+                # gripper_pos_left = 250 - int(angles[6] * gripper_scale * 180 / math.pi) #- gripper_offset_left  # gello gripper
+                gripper_pos_left = int(angles[6] * gripper_scale * 180 / math.pi) - gripper_offset_left  # for my leader gripper
+                gripper_pos_left = max(min(gripper_pos_left, gripper_pos_max_deg), gripper_pos_min_deg)
                 pga_left.move(gripper_pos_left)
-                # print("gripper took", time.time()- gripper_start)
+                print("act gripper val",gripper_pos_left, gripper_pos_right)
         else:
             time.sleep(0.01)
         end_time = time.time()
         print(end_time - start_time, "[s]")
-
-        # pos = pga.get_pos()
-        # print("position", pos)
-

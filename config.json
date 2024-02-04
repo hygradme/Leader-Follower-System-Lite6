@@ -1,0 +1,20 @@
+{
+    "DEVICENAME": "COM7",
+    "use_gripper": true,
+    "use_follower": true,
+    "use_left": true,
+    "use_right": true,
+    "ip_robot_left": "192.168.1.188",
+    "ip_robot_right": "192.168.1.160",
+    "leader_baudrate": 1000000,
+    "DXL_IDs_left": [1, 2, 3, 4, 5, 6],
+    "DXL_IDs_right": [11, 12, 13, 14, 15, 16],
+    "gripper_follower_baudrate": 115200,
+    "gripper_id_left": [8],
+    "gripper_id_right": [18],
+    "gripper_scale": 8,
+    "gripper_offset_left": 40,
+    "gripper_offset_right": 40,
+    "gripper_pos_max_deg": 250,
+    "gripper_pos_min_deg": 30
+}
