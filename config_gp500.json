@@ -1,0 +1,20 @@
+{
+    "LEADERDEVICENAME": "COM6",
+    "use_gripper": false,
+    "use_follower": true,
+    "use_left": true,
+    "use_right": true,
+    "devicename_robot_left": "COM13",
+    "devicename_robot_right": "COM12",
+    "leader_baudrate": 1000000,
+    "DXL_IDs_left": [1, 2, 3, 4, 5, 6, 7],
+    "DXL_IDs_right": [11, 12, 13, 14, 15, 16, 17],
+    "gripper_follower_baudrate": 1000000,
+    "gripper_id_left": [8],
+    "gripper_id_right": [18],
+    "gripper_scale": 8,
+    "gripper_offset_left": 40,
+    "gripper_offset_right": 40,
+    "gripper_pos_max_deg": 250,
+    "gripper_pos_min_deg": 30
+}
